@@ -15,7 +15,6 @@ import java.util.concurrent.atomic.AtomicInteger;
  * 4. Don't forget that calculation method can throw exception, process it right way.
  * (Stop calculation process and print error message. Ignore already calculated intermediate results, user doesn't need it.)
  * <p>
- * Please attach code files to email - skhisamov@fitechsource.com
  */
 
 public class Test {
