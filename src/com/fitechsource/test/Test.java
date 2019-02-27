@@ -5,6 +5,8 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Should be improved to reduce calculation time.
@@ -20,22 +22,34 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class Test {
 
     public static void main(String[] args) throws TestException {
+        //Time checking
         long tmp = System.currentTimeMillis();
         Set<Double> res = new ConcurrentSkipListSet<>();
         AtomicInteger calcRemaining = new AtomicInteger(TestConsts.N);
-        //AtomicInteger calcCounter = new AtomicInteger(0);
+        AtomicInteger calcCounter = new AtomicInteger(0);
+        AtomicInteger falseCalcCounter = new AtomicInteger(0);
         ArrayList<Thread> threads = new ArrayList<>();
+        final Thread mainThread = Thread.currentThread();
+        Lock lock = new ReentrantLock();
         Runnable r = () -> {
             try {
-                int val = calcRemaining.getAndDecrement();
-                while (val > 0) {
+                while (calcRemaining.intValue() > 0 && !mainThread.isInterrupted() && !Thread.interrupted()) {
+                    int val = calcRemaining.getAndDecrement();
                     res.addAll(TestCalc.calculate(val));
-                    val = calcRemaining.getAndDecrement();
-                    // calcCounter.incrementAndGet();
+                    calcCounter.incrementAndGet();
+                    if (mainThread.isInterrupted()) {
+                        falseCalcCounter.incrementAndGet();
+                    }
                 }
-
             } catch (TestException e) {
-                e.printStackTrace();
+                System.out.println("MAIN THREAD IS " + mainThread.isInterrupted() + (System.currentTimeMillis() - tmp));
+                if (lock.tryLock()) {
+                    if (!mainThread.isInterrupted()) {
+                        mainThread.interrupt();
+                        e.printStackTrace();
+                        System.out.println(mainThread.isInterrupted() + " " + (System.currentTimeMillis() - tmp));
+                    }
+                }
             }
         };
         for (int i = 0; i < TestConsts.MAX_THREADS; i++) {
@@ -51,10 +65,17 @@ public class Test {
                 e.printStackTrace();
             }
         }
-        System.out.println(res);
-        // System.out.println(calcCounter);
+        if (lock.tryLock()) {
+            System.out.println(res);
+        }
+        //Time checking
         print(System.currentTimeMillis() - tmp);
-        run(new HashSet<>());
+
+        System.out.println(calcCounter);
+        System.out.println(falseCalcCounter);
+
+        //Original source code run
+        //run(new HashSet<>());
     }
 
     public static void run(Collection<Double> res) throws TestException {
