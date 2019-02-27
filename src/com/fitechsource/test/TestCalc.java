@@ -10,6 +10,9 @@ public class TestCalc {
 
     public static Set<Double> calculate(int num) throws TestException {
         // Emulates calculation delay time.
+        if (rnd.nextInt(1000) > 0) {
+            throw new TestException("aqq");
+        }
         try {
             Thread.sleep(rnd.nextInt(1000) + 1);
         }

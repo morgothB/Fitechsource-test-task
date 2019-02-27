@@ -29,26 +29,22 @@ public class Test {
         AtomicInteger calcCounter = new AtomicInteger(0);
         AtomicInteger falseCalcCounter = new AtomicInteger(0);
         ArrayList<Thread> threads = new ArrayList<>();
-        final Thread mainThread = Thread.currentThread();
-        Lock lock = new ReentrantLock();
+        ReentrantLock lock = new ReentrantLock();
         Runnable r = () -> {
             try {
-                while (calcRemaining.intValue() > 0 && !mainThread.isInterrupted() && !Thread.interrupted()) {
+                while (calcRemaining.intValue() > 0 && !lock.isLocked()) {
                     int val = calcRemaining.getAndDecrement();
                     res.addAll(TestCalc.calculate(val));
                     calcCounter.incrementAndGet();
-                    if (mainThread.isInterrupted()) {
-                        falseCalcCounter.incrementAndGet();
-                    }
                 }
             } catch (TestException e) {
-                System.out.println("MAIN THREAD IS " + mainThread.isInterrupted() + (System.currentTimeMillis() - tmp));
+                System.out.println("e catch " + (System.currentTimeMillis() - tmp));
                 if (lock.tryLock()) {
-                    if (!mainThread.isInterrupted()) {
-                        mainThread.interrupt();
-                        e.printStackTrace();
-                        System.out.println(mainThread.isInterrupted() + " " + (System.currentTimeMillis() - tmp));
-                    }
+                    e.printStackTrace();
+                    System.out.println(System.currentTimeMillis() - tmp);
+                } else {
+                    System.out.println("TEST");
+                    e.printStackTrace();
                 }
             }
         };
@@ -84,6 +80,7 @@ public class Test {
             res.addAll(TestCalc.calculate(i));
         }
         System.out.println(res);
+        System.out.println(res.size());
         print(System.currentTimeMillis() - tmp);
     }
 
