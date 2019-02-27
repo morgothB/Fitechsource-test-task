@@ -23,11 +23,10 @@ public class Test {
 
     public static void main(String[] args) throws TestException {
         //Time checking
-        long tmp = System.currentTimeMillis();
+        //long tmp = System.currentTimeMillis();
+
         Set<Double> res = new ConcurrentSkipListSet<>();
         AtomicInteger calcRemaining = new AtomicInteger(TestConsts.N);
-        AtomicInteger calcCounter = new AtomicInteger(0);
-        AtomicInteger falseCalcCounter = new AtomicInteger(0);
         ArrayList<Thread> threads = new ArrayList<>();
         ReentrantLock lock = new ReentrantLock();
         Runnable r = () -> {
@@ -35,15 +34,9 @@ public class Test {
                 while (calcRemaining.intValue() > 0 && !lock.isLocked()) {
                     int val = calcRemaining.getAndDecrement();
                     res.addAll(TestCalc.calculate(val));
-                    calcCounter.incrementAndGet();
                 }
             } catch (TestException e) {
-                System.out.println("e catch " + (System.currentTimeMillis() - tmp));
                 if (lock.tryLock()) {
-                    e.printStackTrace();
-                    System.out.println(System.currentTimeMillis() - tmp);
-                } else {
-                    System.out.println("TEST");
                     e.printStackTrace();
                 }
             }
@@ -65,10 +58,7 @@ public class Test {
             System.out.println(res);
         }
         //Time checking
-        print(System.currentTimeMillis() - tmp);
-
-        System.out.println(calcCounter);
-        System.out.println(falseCalcCounter);
+        //print(System.currentTimeMillis() - tmp);
 
         //Original source code run
         //run(new HashSet<>());
@@ -80,7 +70,6 @@ public class Test {
             res.addAll(TestCalc.calculate(i));
         }
         System.out.println(res);
-        System.out.println(res.size());
         print(System.currentTimeMillis() - tmp);
     }
 
