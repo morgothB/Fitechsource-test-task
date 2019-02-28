@@ -23,17 +23,19 @@ public class Test {
 
     public static void main(String[] args) throws TestException {
         //Time checking
-        //long tmp = System.currentTimeMillis();
+        long tmp = System.currentTimeMillis();
 
         Set<Double> res = new ConcurrentSkipListSet<>();
         AtomicInteger calcRemaining = new AtomicInteger(TestConsts.N);
         ArrayList<Thread> threads = new ArrayList<>();
+        AtomicInteger calcCnt = new AtomicInteger(0);
         ReentrantLock lock = new ReentrantLock();
         Runnable r = () -> {
             try {
                 while (calcRemaining.intValue() > 0 && !lock.isLocked()) {
                     int val = calcRemaining.getAndDecrement();
                     res.addAll(TestCalc.calculate(val));
+                    calcCnt.incrementAndGet();
                 }
             } catch (TestException e) {
                 if (lock.tryLock()) {
@@ -58,7 +60,9 @@ public class Test {
             System.out.println(res);
         }
         //Time checking
-        //print(System.currentTimeMillis() - tmp);
+        print(System.currentTimeMillis() - tmp);
+
+        System.out.println(calcCnt);
 
         //Original source code run
         //run(new HashSet<>());
